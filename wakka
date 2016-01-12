@@ -1,0 +1,36 @@
+#!/usr/bin/env ruby
+
+require 'rest-client'
+require 'yaml'
+
+begin
+	config = YAML.load_file("config.yml")
+rescue Errno::ENOENT
+	puts "Please create config file: \"config.yml\""
+	exit 1
+end
+
+if !config || config["telegram_api_token"].nil? || config["telegram_chat_id"].nil? || config["filename"].nil?
+	puts "Please set \"telegram_api_token\", \"telegram_chat_id\", and \"filename\" in the config file."
+	exit 1
+end
+telegram_api_token = config["telegram_api_token"]
+telegram_chat_id = config["telegram_chat_id"]
+$filename = config["filename"]
+
+# Get piped contents from shell.
+content = ARGF.read(ARGV.first).to_s
+
+# Create file in memory.
+# r - Read only
+# b - Binary mode
+file = StringIO.new content, "rb"
+
+# Give StringIO a path method.
+# Needed for RestClient to treat StringIO as a file.
+def file.path
+	$filename
+end
+
+url = "https://api.telegram.org/bot#{telegram_api_token}/sendDocument"
+RestClient.post url, {:document => file, :chat_id => telegram_chat_id, :multipart => true}
