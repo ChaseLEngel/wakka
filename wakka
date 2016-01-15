@@ -10,9 +10,20 @@ rescue Errno::ENOENT
 	exit 1
 end
 
-if !config || config["telegram_api_token"].nil? || config["telegram_chat_id"].nil? || config["filename"].nil?
-	puts "Please set \"telegram_api_token\", \"telegram_chat_id\", and \"filename\" in the config file."
+config_variables = %w[telegram_api_token telegram_chat_id filename]
+
+# Make sure config file isn't empty.
+unless config
+	puts "Config file is empty. Please define #{config_variables.join(", ")}."
 	exit 1
+end
+
+# Check that config file is correct.
+config_variables.each do |var|
+	if config[var].nil?
+		puts "Please define \"#{var}\" in the config file."
+		exit 1
+	end
 end
 telegram_api_token = config["telegram_api_token"]
 telegram_chat_id = config["telegram_chat_id"]
